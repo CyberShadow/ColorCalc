@@ -88,6 +88,8 @@ Color eval(string expr)
 
 void main(string[] args)
 {
+	if (args.length == 1)
+		return writefln("Please enter an expression.");
 	string expr = join(args[1..$], " ");
 	writefln("%s", eval(expr));
 }
