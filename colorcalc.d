@@ -50,6 +50,11 @@ struct Color
 			return cval < 0 ? "--" : cval > 255 ? "**" : format("%02X", cval);
 		}
 
+		if (r==g && g==b)
+			if (r<0 || r>255)
+				return to!string(r / 255.0);
+			else
+				return cvalToStr(r) ~ cvalToStr(g) ~ cvalToStr(b) ~ " (" ~ to!string(r / 255.0) ~ ")";
 		return cvalToStr(r) ~ cvalToStr(g) ~ cvalToStr(b);
 	}
 }
