@@ -71,8 +71,8 @@ Color eval(string expr)
 		return a < 0 ? b : b < 0 ? a : a < b ? a : b;
 	}
 
-	p1 = firstOf(indexOf(expr, '+'), indexOf(expr, '-'));
-	p2 = firstOf(indexOf(expr, '*'), indexOf(expr, '/'));
+	p1 = firstOf(lastIndexOf(expr, '+'), lastIndexOf(expr, '-'));
+	p2 = firstOf(lastIndexOf(expr, '*'), lastIndexOf(expr, '/'));
 	if (p1 >= 0)
 		if (expr[p1]=='+')
 			return eval(expr[0..p1]) + eval(expr[p1+1..$]);
