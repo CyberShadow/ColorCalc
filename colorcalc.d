@@ -5,9 +5,9 @@ import std.math;
 
 struct Color
 {
-	int r,g,b;
+	real r,g,b;
 
-	this(int r, int g, int b) { this.r = r; this.g = g; this.b = b; }
+	this(real r, real g, real b) { this.r = r; this.g = g; this.b = b; }
 	
 	this(string s)
 	{
@@ -21,40 +21,32 @@ struct Color
 		
 		if (s.length == 6)
 		{
-			r = fromHex(s[0]) << 4 | fromHex(s[1]);
-			g = fromHex(s[2]) << 4 | fromHex(s[3]);
-			b = fromHex(s[4]) << 4 | fromHex(s[5]);
+			r = (fromHex(s[0]) << 4 | fromHex(s[1])) / 255.0;
+			g = (fromHex(s[2]) << 4 | fromHex(s[3])) / 255.0;
+			b = (fromHex(s[4]) << 4 | fromHex(s[5])) / 255.0;
 		}
 		else
-			r = g = b = cast(int)round(to!real(s) * 255);
+			r = g = b = to!real(s);
 	}
 
 	Color opBinary(string op)(Color o)
 	{
-		static if (op == "+" || op == "-")
-			mixin("return Color(r"~op~"o.r, g"~op~"o.g, b"~op~"o.b);");
-		else
-		static if (op == "*")
-			return Color(r*o.r / 255, g*o.g / 255, b*o.b / 255);
-		else
-		static if (op == "/")
-			return Color(r*255 / o.r, g*255 / o.g, b*255 / o.b);
-		else
-			static assert(0, "Don't know how to " ~ op ~ " two Colors");
+		mixin("return Color(r"~op~"o.r, g"~op~"o.g, b"~op~"o.b);");
 	}
 
 	string toString()
 	{
-		static string cvalToStr(int cval)
+		static string cvalToStr(real rval)
 		{
+			int cval = cast(int)round(rval * 255);
 			return cval < 0 ? "--" : cval > 255 ? "**" : format("%02X", cval);
 		}
 
 		if (r==g && g==b)
-			if (r<0 || r>255)
-				return to!string(r / 255.0);
+			if (r<-0.0001 || r>1.0001)
+				return to!string(r);
 			else
-				return cvalToStr(r) ~ cvalToStr(g) ~ cvalToStr(b) ~ " (" ~ to!string(r / 255.0) ~ ")";
+				return cvalToStr(r) ~ cvalToStr(g) ~ cvalToStr(b) ~ " (" ~ to!string(r) ~ ")";
 		return cvalToStr(r) ~ cvalToStr(g) ~ cvalToStr(b);
 	}
 }
@@ -62,22 +54,24 @@ struct Color
 Color eval(string expr)
 {
 	expr = strip(expr);
-	int p1, p2;
-	if ((p1=indexOf(expr, '('))>=0)
-	{
-		p2 = lastIndexOf(expr, ')');
-		if (p2 < 0)
-			throw new Exception("Unmatched parenthesis");
-		return eval(expr[0..p1] ~ eval(expr[p1+1..p2]).toString() ~ expr[p2+1..$]);
-	}
 
-	static int firstOf(int a, int b)
+	static int findOperand(string s, char op1, char op2)
 	{
-		return a < 0 ? b : b < 0 ? a : a < b ? a : b;
+		int parens = 0;
+		foreach_reverse(p, c; s)
+			if ((c==op1 || c==op2) && parens==0)
+				return p;
+			else
+			if (c==')')
+				parens++;
+			else
+			if (c=='(')
+				parens--;
+		return -1;
 	}
-
-	p1 = firstOf(lastIndexOf(expr, '+'), lastIndexOf(expr, '-'));
-	p2 = firstOf(lastIndexOf(expr, '*'), lastIndexOf(expr, '/'));
+	
+	int p1 = findOperand(expr, '+', '-');
+	int p2 = findOperand(expr, '*', '/');
 	if (p1 >= 0)
 		if (expr[p1]=='+')
 			return eval(expr[0..p1]) + eval(expr[p1+1..$]);
@@ -88,6 +82,8 @@ Color eval(string expr)
 			return eval(expr[0..p2]) * eval(expr[p2+1..$]);
 		else
 			return eval(expr[0..p2]) / eval(expr[p2+1..$]);
+	if (expr.length > 2 && expr[0]=='(' && expr[$-1]==')')
+		return eval(expr[1..$-1]);
 	return Color(expr);
 }
 
