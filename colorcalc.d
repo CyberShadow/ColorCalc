@@ -123,7 +123,7 @@ int main(string[] args)
 				gamma = to!real(args[++i]);
 				break;
 			default:
-				string expr = join(args[1..$], " ");
+				string expr = join(args[i..$], " ");
 				writeln(eval(expr));
 				return 0;
 		}
