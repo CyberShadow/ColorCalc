@@ -6,6 +6,7 @@ import std.conv;
 import std.math;
 import std.exception;
 
+bool sRGB = false;
 real gamma = 2.2;
 
 struct Color
@@ -58,16 +59,41 @@ struct Color
 	static private real fromPixel(int p)
 	{
 		real r = p / 255.0;
+		
+		if (sRGB)
+			r = sRGB_to_linear(r);
+		else
 		if (gamma)
 			r = pow(r, gamma);
+		
 		return r;
 	}
 
 	static private int toPixel(real v)
 	{
+		if (sRGB)
+			v = linear_to_sRGB(v);
+		else
 		if (gamma)
 			v = pow(v, 1/gamma);
+		
 		return cast(int)round(v * 255);
+	}
+
+	static private real sRGB_to_linear(real cf)
+	{
+		if (cf <= 0.0392857)
+			return cf / 12.9232102;
+		else
+			return pow((cf + 0.055)/1.055, 2.4L);
+	}
+
+	static private real linear_to_sRGB(real cf)
+	{
+		if (cf <= 0.00303993)
+			return cf * 12.9232102;
+		else
+			return 1.055*pow(cf, 1/2.4L) - 0.055;
 	}
 }
 
@@ -122,6 +148,9 @@ int main(string[] args)
 				enforce(i+1<args.length, "Gamma value not specified");
 				gamma = to!real(args[++i]);
 				break;
+			case "--sRGB":
+				sRGB = true;
+				break;
 			default:
 				string expr = join(args[i..$], " ");
 				writeln(eval(expr));
@@ -130,11 +159,12 @@ int main(string[] args)
 
 	if (args.length == 1 || usage)
 	{
-		stderr.writeln("Usage: " ~ args[0] ~ " [--gamma GAMMA] EXPRESSION");
+		stderr.writeln("Usage: " ~ args[0] ~ " [OPTIONS]... EXPRESSION");
 		stderr.writeln("Options:");
 		stderr.writeln("  -h	--help		Display this help screen.");
 		stderr.writeln("  -g	--gamma GAMMA	Use specified gamma value (default: 2.2).");
 		stderr.writeln("			Specify 0 to disable gamma correction (mathematically equivalent to specifying 1).");
+		stderr.writeln("	--sRGB		Use sRGB instead of gamma correction.");
 		return 2;
 	}
 
