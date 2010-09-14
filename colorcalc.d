@@ -2,6 +2,9 @@ import std.stdio;
 import std.string;
 import std.conv;
 import std.math;
+import std.exception;
+
+real gamma = 2.2;
 
 struct Color
 {
@@ -50,13 +53,18 @@ struct Color
 		return cvalToStr(r) ~ cvalToStr(g) ~ cvalToStr(b);
 	}
 
-	static private real fromPixel(ubyte p)
+	static private real fromPixel(int p)
 	{
-		return p / 255.0;
+		real r = p / 255.0;
+		if (gamma)
+			r = pow(r, gamma);
+		return r;
 	}
 
 	static private int toPixel(real v)
 	{
+		if (gamma)
+			v = pow(v, 1/gamma);
 		return cast(int)round(v * 255);
 	}
 }
@@ -97,10 +105,36 @@ Color eval(string expr)
 	return Color(expr);
 }
 
-void main(string[] args)
+int main(string[] args)
 {
-	if (args.length == 1)
-		return writefln("Please enter an expression.");
-	string expr = join(args[1..$], " ");
-	writefln("%s", eval(expr));
+	bool usage;
+	for (int i=1; i<args.length; i++)
+		switch (args[i])
+		{
+			case "-h":
+			case "--help":
+				usage = true;
+				break;
+			case "-g":
+			case "--gamma":
+				enforce(i+1<args.length, "Gamma value not specified");
+				gamma = to!real(args[++i]);
+				break;
+			default:
+				string expr = join(args[1..$], " ");
+				writeln(eval(expr));
+				return 0;
+		}
+
+	if (args.length == 1 || usage)
+	{
+		stderr.writeln("Usage: " ~ args[0] ~ " [--gamma GAMMA] EXPRESSION");
+		stderr.writeln("Options:");
+		stderr.writeln("  -h	--help		Display this help screen.");
+		stderr.writeln("  -g	--gamma GAMMA	Use specified gamma value (default: 2.2).");
+		stderr.writeln("			Specify 0 to disable gamma correction (mathematically equivalent to specifying 1).");
+		return 2;
+	}
+
+	throw new Exception("No expression given.");
 }
