@@ -21,9 +21,9 @@ struct Color
 		
 		if (s.length == 6)
 		{
-			r = (fromHex(s[0]) << 4 | fromHex(s[1])) / 255.0;
-			g = (fromHex(s[2]) << 4 | fromHex(s[3])) / 255.0;
-			b = (fromHex(s[4]) << 4 | fromHex(s[5])) / 255.0;
+			r = fromPixel(fromHex(s[0]) << 4 | fromHex(s[1]));
+			g = fromPixel(fromHex(s[2]) << 4 | fromHex(s[3]));
+			b = fromPixel(fromHex(s[4]) << 4 | fromHex(s[5]));
 		}
 		else
 			r = g = b = to!real(s);
@@ -38,16 +38,26 @@ struct Color
 	{
 		static string cvalToStr(real rval)
 		{
-			int cval = cast(int)round(rval * 255);
+			int cval = toPixel(rval);
 			return cval < 0 ? "--" : cval > 255 ? "**" : format("%02X", cval);
 		}
 
 		if (r==g && g==b)
 			if (r<-0.0001 || r>1.0001)
-				return to!string(r);
+				return to!string(r); // hack - we don't know if the user wants a scalar or a color
 			else
 				return cvalToStr(r) ~ cvalToStr(g) ~ cvalToStr(b) ~ " (" ~ to!string(r) ~ ")";
 		return cvalToStr(r) ~ cvalToStr(g) ~ cvalToStr(b);
+	}
+
+	static private real fromPixel(ubyte p)
+	{
+		return p / 255.0;
+	}
+
+	static private int toPixel(real v)
+	{
+		return cast(int)round(v * 255);
 	}
 }
 
