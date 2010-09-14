@@ -1,3 +1,5 @@
+// Written in the D Programming Language, version 2
+
 import std.stdio;
 import std.string;
 import std.conv;
