@@ -49,10 +49,12 @@ struct Color
 		}
 
 		if (r==g && g==b)
+		{
 			if (r<-0.0001 || r>1.0001)
 				return to!string(r); // hack - we don't know if the user wants a scalar or a color
 			else
 				return cvalToStr(r) ~ cvalToStr(g) ~ cvalToStr(b) ~ " (" ~ to!string(r) ~ ")";
+		}
 		return cvalToStr(r) ~ cvalToStr(g) ~ cvalToStr(b);
 	}
 
@@ -119,15 +121,19 @@ Color eval(string expr)
 	auto p1 = findOperand(expr, '+', '-');
 	auto p2 = findOperand(expr, '*', '/');
 	if (p1 >= 0)
+	{
 		if (expr[p1]=='+')
 			return eval(expr[0..p1]) + eval(expr[p1+1..$]);
 		else
 			return eval(expr[0..p1]) - eval(expr[p1+1..$]);
+	}
 	if (p2 >= 0)
+	{
 		if (expr[p2]=='*')
 			return eval(expr[0..p2]) * eval(expr[p2+1..$]);
 		else
 			return eval(expr[0..p2]) / eval(expr[p2+1..$]);
+	}
 	if (expr.length > 2 && expr[0]=='(' && expr[$-1]==')')
 		return eval(expr[1..$-1]);
 	return Color(expr);
