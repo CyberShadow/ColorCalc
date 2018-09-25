@@ -19,10 +19,10 @@ struct Color
 	{
 		static int fromHex(char c)
 		{
-			int p = indexOf("0123456789ABCDEF", c, CaseSensitive.no);
+			auto p = indexOf("0123456789ABCDEF", c, CaseSensitive.no);
 			if (p < 0)
 				throw new Exception("Bad hex digit " ~ c);
-			return p;
+			return cast(int)p;
 		}
 		
 		if (s.length == 6)
@@ -101,7 +101,7 @@ Color eval(string expr)
 {
 	expr = strip(expr);
 
-	static int findOperand(string s, char op1, char op2)
+	static auto findOperand(string s, char op1, char op2)
 	{
 		int parens = 0;
 		foreach_reverse(p, c; s)
@@ -116,8 +116,8 @@ Color eval(string expr)
 		return -1;
 	}
 	
-	int p1 = findOperand(expr, '+', '-');
-	int p2 = findOperand(expr, '*', '/');
+	auto p1 = findOperand(expr, '+', '-');
+	auto p2 = findOperand(expr, '*', '/');
 	if (p1 >= 0)
 		if (expr[p1]=='+')
 			return eval(expr[0..p1]) + eval(expr[p1+1..$]);
